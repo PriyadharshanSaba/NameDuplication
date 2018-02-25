@@ -4,6 +4,7 @@ global name_frame
 global fname
 global lname
 global ufn
+global fin
 #sys.path.append("/usr/local/lib/python3.6/site-packages")
 
 
@@ -12,17 +13,17 @@ def fetch_unique_records(ufn,name_frame,record):
     for i in ufn:
         if oj==0:
             first_name_check = i
-            fname_group=dset[dset['fn']==first_name_check]['ln']
+            fname_group=name_frame[name_frame['fn']==first_name_check]['ln']
             lname_group=(fname_group.to_frame()).ln
             decision_tree_split(i.split(' '),lname_group,name_frame,record)
-            oj+=1
+            oj+=0
         else:
             break
 
 
+#To check if the First name is unique or there are any initials that may map to a similar person already in records
 def decision_tree_split(fname,lname,name_frame,record):
     if len(fname) == 1:
-                                                        #To check if the First name is unique or there are any initials that may map to a similar person already in records
         io=0
         for lname_split in lname:
             io+=1
@@ -34,18 +35,29 @@ def decision_tree_split(fname,lname,name_frame,record):
                     name_frame=name_frame.iloc[1:]
                     lnameleft.append(list(lname_split.split()))
                 else:
-                    lnameright.append(list(lname_split.split()))
-                    dob(lname_split,current,name_frame,record)
+                    #name_frame=name_frame.iloc[1:]
+                    if not dob(lname_split.split(),current,name_frame,record):
+                        dob(lname_split,current,name_frame,record)
+                        name_frame=name_frame.iloc[1:]
             else:
-                q=record[record['ln']==lname_split]['ln'].values
+                #print("\n\nREC\n",record)
+                q=record[record['ln'] == lname_split].values
                 if len(q)==0:
-                    db.append(name_frame.iloc[0].name)
+                    db.append(current)
                     record = record.append(name_frame.iloc[0])
                     name_frame=name_frame.iloc[1:]
                     lnameleft.append(lname_split)
                 else:
                     lnameright.append(lname_split)
-                    dob(lname_split,current,name_frame,record)
+                    if not dob(lname_split,current,name_frame,record):
+                        db.append(current)
+                        record = record.append(name_frame.iloc[0])
+                        name_frame=name_frame.iloc[1:]
+                    else:
+                        name_frame=name_frame.iloc[1:]
+    with open('records.csv', 'a') as f:
+        record.to_csv(f,header=False)
+
 
 
 
@@ -67,9 +79,22 @@ def existence_rules(xname):
             return True
 
 
-def dob(nam,ind,name_frame,record):
-    rec=dset.iloc[ind]
-    
+#FUNCTION decides by classifying withrespect to gender and DOB
+def dob(nam,indx,name_frame,record):
+    current_c=dset.iloc[indx]
+    try:
+        rec= record.loc[record['ln'] == nam]
+        x=rec['ln'].values[0]
+        #    return current_c['dob'],rec['dob'].values[0]
+        if current_c['dob']==rec['dob'].values[0] and current_c['gn']==rec['gn'].values[0]:
+            return True
+        else:
+            return False
+
+    except:
+        return True
+
+#print("\n>>>>>>>>>>>",x,current_c['dob'],"\n------------------------")
 
 
 
@@ -85,8 +110,7 @@ def presence(nam):
                         exp+=1
                         continue
                     elif k[0] == j[0]:
-                        if not dob(nam):
-                            return False
+                        return False
         if exp==len(nam.split()):
             return True
         else:
@@ -94,25 +118,33 @@ def presence(nam):
     return False
 
 
+def remove_duplicates(db,dset):
+    pdf = pd.DataFrame(columns=['ln','dob','gn','fn'])
+    for i in db:
+        pdf.append(dset.iloc[i])
+    print(pdf)
+    return 0
+
 
 
 dset = pd.read_csv('dset.csv')
 record = pd.DataFrame(columns=['ln','dob','gn','fn'])
+pdf = pd.DataFrame(columns=['ln','dob','gn','fn'])
 lnameleft, lnameright, db = list(), list(), list()
-ufn = dset.fn.unique()
+with open('records.csv', 'w') as f:
+    record.to_csv(f,header=True)
+
+ufn = dset.fn
+ufn= ufn.drop_duplicates()
 name_frame=dset.sort_values('fn')
-ufn.sort()
-
-print(name_frame)
 fetch_unique_records(ufn,name_frame,record)
+db=list(set(db))
+print(ufn)
+print(db)
+for i in db:
+    pdf=pdf.append(dset.iloc[i])
+print(pdf)
 
 
 
-print("Left List:\n",lnameleft)
-print("\nRight List:\n",lnameright)
-print("\n\nrec\n",db)
 
-
-
-
-#record = record.append(name_frame.iloc[0])
