@@ -58,19 +58,34 @@ def existence_rules(xname):
 #            return False
 
 
-def dob():
-    return
+def dob(nam,l):
+    dobirth = lnameleft[l]
+    print (dobirth," --- ",l)
+    return True
 
 
 def presence(nam):
+    exp=0
+    l=0
     if len(lnameleft)==0:
         return False
     else:
         for i in lnameleft:
             for j in nam.split():
                 for k in i:
-                    if k == j:
-                        return True
+                    if k == j:                                      #splits the last name and follows the decision tree
+                        exp+=1
+                        continue
+        if exp==len(nam.split()):
+            return True
+        else:
+            return False
+#                        elif k[0]==j[0]:
+#                            if not dob(nam,l):
+#                                return False
+#                            else:
+#                                return True
+        l+=1
     return False
 
 
