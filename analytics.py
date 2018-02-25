@@ -4,7 +4,6 @@ global name_frame
 global fname
 global lname
 global ufn
-global record
 #sys.path.append("/usr/local/lib/python3.6/site-packages")
 
 
@@ -27,23 +26,26 @@ def decision_tree_split(fname,lname,name_frame,record):
         io=0
         for lname_split in lname:
             io+=1
+            current=name_frame.iloc[0].name                 #Current index
             if len(lname_split.split(' ')) >= 2:           #Takes Name and following initials as one entity
                 if not existence_rules(lname_split):
-                    #record = record.append(name_frame.iloc[0])
-                    db.append(name_frame.iloc[0].name)
+                    db.append(current)
+                    record = record.append(name_frame.iloc[0])
                     name_frame=name_frame.iloc[1:]
                     lnameleft.append(list(lname_split.split()))
-                    print(name_frame.iloc[0].name)
                 else:
                     lnameright.append(list(lname_split.split()))
+                    dob(lname_split,current,name_frame,record)
             else:
-                if not lname_split in lnameleft:
+                q=record[record['ln']==lname_split]['ln'].values
+                if len(q)==0:
                     db.append(name_frame.iloc[0].name)
+                    record = record.append(name_frame.iloc[0])
                     name_frame=name_frame.iloc[1:]
                     lnameleft.append(lname_split)
-                    print("\n\nrec\n",record)
                 else:
                     lnameright.append(lname_split)
+                    dob(lname_split,current,name_frame,record)
 
 
 
@@ -65,11 +67,10 @@ def existence_rules(xname):
             return True
 
 
-def dob(nam):
-    name=""
-    for i in nam:
-        name=name+nam
-    return True
+def dob(nam,ind,name_frame,record):
+    rec=dset.iloc[ind]
+    
+
 
 
 def presence(nam):
@@ -114,19 +115,4 @@ print("\n\nrec\n",db)
 
 
 
-
-
-#print("\n\nrec\n",record)
-
-#first_name = input("First Name").upper()
-#last_name = input("Last Name").upper()
-#dob = name = input("DOB").upper()
-#gender = input("Gender ( F | M )").upper()
-
-
-
-
-#p.iterrows()
-#len(df.index)
-#names_dset= dset.values
-#    y=dset.query("fn == 'WILLIAM'")['ln']
+#record = record.append(name_frame.iloc[0])
