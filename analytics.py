@@ -1,27 +1,27 @@
 import sys
 import pandas as pd
-global zp
 global name_frame
 global fname
 global lname
 global ufn
+global record
 #sys.path.append("/usr/local/lib/python3.6/site-packages")
 
 
-def fetch_unique_records(ufn,name_frame):
+def fetch_unique_records(ufn,name_frame,record):
     oj=0
     for i in ufn:
         if oj==0:
             first_name_check = i
             fname_group=dset[dset['fn']==first_name_check]['ln']
             lname_group=(fname_group.to_frame()).ln
-            decision_tree_split(i.split(' '),lname_group,name_frame)
+            decision_tree_split(i.split(' '),lname_group,name_frame,record)
             oj+=1
         else:
             break
 
 
-def decision_tree_split(fname,lname,name_frame):
+def decision_tree_split(fname,lname,name_frame,record):
     if len(fname) == 1:
                                                         #To check if the First name is unique or there are any initials that may map to a similar person already in records
         io=0
@@ -29,17 +29,21 @@ def decision_tree_split(fname,lname,name_frame):
             io+=1
             if len(lname_split.split(' ')) >= 2:           #Takes Name and following initials as one entity
                 if not existence_rules(lname_split):
-                    lname = lname.iloc[1:]
-                    print(lname)
+                    #record = record.append(name_frame.iloc[0])
+                    db.append(name_frame.iloc[0].name)
+                    name_frame=name_frame.iloc[1:]
                     lnameleft.append(list(lname_split.split()))
+                    print(name_frame.iloc[0].name)
                 else:
-
                     lnameright.append(list(lname_split.split()))
             else:
-                if lname_split in lnameleft:
-                    lnameright.append(lname_split)
-                else:
+                if not lname_split in lnameleft:
+                    db.append(name_frame.iloc[0].name)
+                    name_frame=name_frame.iloc[1:]
                     lnameleft.append(lname_split)
+                    print("\n\nrec\n",record)
+                else:
+                    lnameright.append(lname_split)
 
 
 
@@ -90,7 +94,6 @@ def presence(nam):
 
 
 
-zp=0
 
 dset = pd.read_csv('dset.csv')
 record = pd.DataFrame(columns=['ln','dob','gn','fn'])
@@ -98,20 +101,22 @@ lnameleft, lnameright, db = list(), list(), list()
 ufn = dset.fn.unique()
 name_frame=dset.sort_values('fn')
 ufn.sort()
-print(ufn)
+
 print(name_frame)
-fetch_unique_records(ufn,name_frame)
+fetch_unique_records(ufn,name_frame,record)
+
+
+
 print("Left List:\n",lnameleft)
 print("\nRight List:\n",lnameright)
+print("\n\nrec\n",db)
 
 
 
 
 
 
-
-
-
+#print("\n\nrec\n",record)
 
 #first_name = input("First Name").upper()
 #last_name = input("Last Name").upper()
